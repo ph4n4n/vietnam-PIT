@@ -477,6 +477,55 @@ footer a {
   opacity: 0.5;
 }
 
+/* Breakdown tables */
+.breakdown-tables {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+.breakdown-col h4 {
+  color: var(--bg-primary);
+  background: linear-gradient(135deg, var(--accent), var(--success));
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.breakdown-col table {
+  font-size: 0.8rem;
+}
+
+.breakdown-col th,
+.breakdown-col td {
+  padding: 0.5rem 0.6rem;
+  text-align: right;
+}
+
+.breakdown-col th:first-child,
+.breakdown-col td:first-child {
+  text-align: left;
+}
+
+.breakdown-col .has-tax td {
+  color: var(--text-primary);
+}
+
+.breakdown-col .no-tax td {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+@media (max-width: 768px) {
+  .breakdown-tables {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Modal */
 .modal {
   display: none;
