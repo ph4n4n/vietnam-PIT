@@ -350,19 +350,35 @@ tr:hover td {
   color: var(--success);
 }
 
-/* Mobile table scroll */
+/* Mobile responsive */
 @media (max-width: 640px) {
   .result-card {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
   
   table {
-    min-width: 480px;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+    min-width: 100%;
   }
   
   th, td {
-    padding: 0.75rem 1rem;
+    padding: 0.6rem 0.5rem;
+    white-space: nowrap;
+  }
+  
+  .col-label {
+    white-space: normal;
+    max-width: 120px;
+    font-size: 0.75rem;
+  }
+  
+  .info-row td {
+    font-size: 0.7rem;
+  }
+  
+  .highlight-row .saved-value {
+    font-size: 0.95rem;
   }
   
   .input-section {
@@ -370,7 +386,7 @@ tr:hover td {
   }
   
   body {
-    padding: 1rem 0.75rem;
+    padding: 1rem 0.5rem;
   }
   
   h1 {
@@ -379,6 +395,14 @@ tr:hover td {
   
   .subtitle {
     font-size: 0.85rem;
+  }
+  
+  .result-header {
+    padding: 1rem;
+  }
+  
+  .result-header h2 {
+    font-size: 1rem;
   }
 }
 
