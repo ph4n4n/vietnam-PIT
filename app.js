@@ -85,9 +85,12 @@ function calculatePIT(grossIncome, dependents) {
   const taxOld = calculateProgressiveTax(taxableOld, cfg.bracketsOld);
   const taxNew = calculateProgressiveTax(taxableNew, cfg.bracketsNew);
 
-  // Tax when paying full (no family deduction, only insurance)
-  const taxNoDeductOld = calculateProgressiveTax(incomeAfterInsurance, cfg.bracketsOld);
-  const taxNoDeductNew = calculateProgressiveTax(incomeAfterInsurance, cfg.bracketsNew);
+  // Tax with only personal deduction (no dependent deduction) - monthly withholding
+  // Company MUST deduct personal deduction, only dependent deduction can be claimed at year-end
+  const taxableSelfOnlyOld = Math.max(0, incomeAfterInsurance - cfg.personalDeduction.old);
+  const taxableSelfOnlyNew = Math.max(0, incomeAfterInsurance - cfg.personalDeduction.new);
+  const taxSelfOnlyOld = calculateProgressiveTax(taxableSelfOnlyOld, cfg.bracketsOld);
+  const taxSelfOnlyNew = calculateProgressiveTax(taxableSelfOnlyNew, cfg.bracketsNew);
 
   return {
     grossIncome,
@@ -103,8 +106,8 @@ function calculatePIT(grossIncome, dependents) {
     taxableNew,
     taxOld,
     taxNew,
-    taxNoDeductOld,
-    taxNoDeductNew,
+    taxSelfOnlyOld,
+    taxSelfOnlyNew,
     taxSaved: taxOld - taxNew,
     netOld: grossIncome - insurance - taxOld,
     netNew: grossIncome - insurance - taxNew,
@@ -293,28 +296,29 @@ function calculate() {
 
   document.getElementById('resultBody').innerHTML = html;
 
-  // Refund section
-  const refundOld = r.taxNoDeductOld * 12 - r.taxOld * 12;
-  const refundNew = r.taxNoDeductNew * 12 - r.taxNew * 12;
+  // Refund section - only dependent deduction can be claimed at year-end
+  // Company already deducts personal deduction monthly
+  const refundOld = (r.taxSelfOnlyOld - r.taxOld) * 12;
+  const refundNew = (r.taxSelfOnlyNew - r.taxNew) * 12;
 
   document.getElementById('refundBody').innerHTML = `
     <tr>
-      <td class="col-label">Thuế đóng/tháng (không giảm trừ)</td>
-      <td class="col-old">${formatMoney(r.taxNoDeductOld)}</td>
-      <td class="col-new">${formatMoney(r.taxNoDeductNew)}</td>
+      <td class="col-label">Thuế khấu trừ/tháng (chỉ trừ bản thân)</td>
+      <td class="col-old">${formatMoney(r.taxSelfOnlyOld)}</td>
+      <td class="col-new">${formatMoney(r.taxSelfOnlyNew)}</td>
     </tr>
     <tr>
-      <td class="col-label">Thuế đóng cả năm (không giảm trừ)</td>
-      <td class="col-old">${formatMoney(r.taxNoDeductOld * 12)}</td>
-      <td class="col-new">${formatMoney(r.taxNoDeductNew * 12)}</td>
+      <td class="col-label">Thuế khấu trừ cả năm</td>
+      <td class="col-old">${formatMoney(r.taxSelfOnlyOld * 12)}</td>
+      <td class="col-new">${formatMoney(r.taxSelfOnlyNew * 12)}</td>
     </tr>
     <tr>
-      <td class="col-label">Thuế thực tế cả năm (có giảm trừ)</td>
+      <td class="col-label">Thuế thực tế (có NPT ×${r.dependents})</td>
       <td class="col-old">${formatMoney(r.taxOld * 12)}</td>
       <td class="col-new">${formatMoney(r.taxNew * 12)}</td>
     </tr>
     <tr class="highlight-row refund-row">
-      <td class="col-label">🔄 TIỀN HOÀN THUẾ CUỐI NĂM</td>
+      <td class="col-label">🔄 HOÀN THUẾ (nhờ NPT)</td>
       <td class="saved-value">${formatMoney(refundOld)}</td>
       <td class="saved-value">${formatMoney(refundNew)}</td>
     </tr>
