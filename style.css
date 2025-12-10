@@ -477,51 +477,6 @@ footer a {
   opacity: 0.5;
 }
 
-/* Breakdown tables */
-.breakdown-tables {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  padding: 1rem;
-}
-
-.breakdown-col h4 {
-  color: var(--accent);
-  font-size: 0.9rem;
-  margin-bottom: 0.75rem;
-  text-align: center;
-}
-
-.breakdown-col table {
-  font-size: 0.85rem;
-}
-
-.breakdown-col th,
-.breakdown-col td {
-  padding: 0.5rem 0.75rem;
-  text-align: right;
-}
-
-.breakdown-col th:first-child,
-.breakdown-col td:first-child {
-  text-align: left;
-}
-
-.breakdown-col .has-tax {
-  color: var(--accent);
-}
-
-.breakdown-col .no-tax {
-  color: var(--text-secondary);
-  opacity: 0.5;
-}
-
-@media (max-width: 768px) {
-  .breakdown-tables {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* Modal */
 .modal {
   display: none;

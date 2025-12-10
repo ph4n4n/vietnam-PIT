@@ -363,7 +363,7 @@ function calculate() {
   const renderBreakdown = (breakdown, isNew) => {
     const brackets = isNew ? TAX_CONFIG.bracketsNew : TAX_CONFIG.bracketsOld;
     return brackets.map((b, i) => {
-      const item = breakdown[i] || { tax: 0 };
+      const item = breakdown[i] || { tax: 0, taxable: 0 };
       const fromLabel = i === 0 ? 'Đến' : `Trên ${formatMoney(brackets[i-1][0]).replace(' ₫', '')} đến`;
       const toLabel = b[0] === Infinity ? '' : ` ${formatMoney(b[0]).replace(' ₫', '')}`;
       const label = b[0] === Infinity ? `Trên ${formatMoney(brackets[i-1][0]).replace(' ₫', '')}` : `${fromLabel}${toLabel}`;
@@ -371,6 +371,7 @@ function calculate() {
       return `
         <tr class="${hasTax ? 'has-tax' : 'no-tax'}">
           <td>${label}</td>
+          <td>${formatMoney(item.taxable)}</td>
           <td>${Math.round(b[1] * 100)}%</td>
           <td>${formatMoney(item.tax)}</td>
         </tr>
