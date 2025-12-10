@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tính Thuế TNCN 2025 vs 2026</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Tính Thuế TNCN</h1>
+      <p class="subtitle">So sánh Luật thuế 2025 (hiện hành) vs Dự thảo 2026</p>
+    </header>
+
+    <section class="input-section">
+      <div class="input-stack">
+        <div class="form-group">
+          <label id="incomeLabel">Thu nhập Gross (VNĐ/tháng)</label>
+          <div class="input-with-toggle">
+            <input type="text" id="incomeInput" placeholder="50,000,000" inputmode="numeric">
+            <div class="toggle-group">
+              <button type="button" class="toggle-btn active" data-type="gross">Gross</button>
+              <button type="button" class="toggle-btn" data-type="net">Net</button>
+              <button type="button" class="toggle-btn" data-type="net-as-gross" title="Lấy Net làm Gross tính thuế">N→G</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="dependents">Số người phụ thuộc</label>
+            <input type="number" id="dependents" value="0" min="0" max="20">
+          </div>
+          <button class="btn" onclick="calculate()">Tính thuế</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="result-section" id="resultSection">
+      <div class="result-card">
+        <div class="result-header">
+          <h2>📊 Kết quả tính thuế</h2>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Mục</th>
+              <th>2025 (Hiện hành)</th>
+              <th>2026 (Dự thảo)</th>
+            </tr>
+          </thead>
+          <tbody id="resultBody">
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="result-section" id="refundSection">
+      <div class="result-card refund-card">
+        <div class="result-header">
+          <h2>🧾 Đóng Full → Hoàn thuế cuối năm</h2>
+          <p class="header-note">Giả định: Không khai giảm trừ gia cảnh hàng tháng, quyết toán hoàn thuế cuối năm</p>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Mục</th>
+              <th>2025 (Hiện hành)</th>
+              <th>2026 (Dự thảo)</th>
+            </tr>
+          </thead>
+          <tbody id="refundBody">
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      <p>BHXH 8% · BHYT 1.5% · BHTN 1% · Trần BHXH/BHYT: 46.8M · Trần BHTN: 99.2M (vùng I)</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+

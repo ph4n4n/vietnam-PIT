@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tính Thuế TNCN 2025 vs 2026</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Tính Thuế TNCN</h1>
+      <p class="subtitle">So sánh Luật thuế 2025 về trước vs Luật thuế 2026 (áp dụng từ 1/1/2026)</p>
+    </header>
+
+    <section class="input-section">
+      <div class="input-stack">
+        <div class="form-group">
+          <label id="incomeLabel">Thu nhập Gross (VNĐ/tháng)</label>
+          <div class="input-with-toggle">
+            <input type="text" id="incomeInput" placeholder="50,000,000" inputmode="numeric">
+            <div class="toggle-group">
+              <button type="button" class="toggle-btn active" data-type="gross">Gross</button>
+              <button type="button" class="toggle-btn" data-type="net">Net</button>
+              <button type="button" class="toggle-btn" data-type="net-as-gross" title="Lấy Net làm Gross tính thuế">N→G</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="dependents">Số người phụ thuộc</label>
+            <input type="number" id="dependents" value="0" min="0" max="20">
+          </div>
+          <div class="form-group form-group-sm">
+            <label for="region">Vùng lương</label>
+            <select id="region">
+              <option value="1">Vùng I</option>
+              <option value="2">Vùng II</option>
+              <option value="3">Vùng III</option>
+              <option value="4">Vùng IV</option>
+            </select>
+          </div>
+          <button class="btn" onclick="calculate()">Tính thuế</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="result-section" id="resultSection">
+      <div class="result-card">
+        <div class="result-header">
+          <h2>📊 Kết quả tính thuế</h2>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Mục</th>
+              <th>2025</th>
+              <th>2026</th>
+            </tr>
+          </thead>
+          <tbody id="resultBody">
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="result-section" id="refundSection">
+      <div class="result-card refund-card">
+        <div class="result-header">
+          <h2>🧾 Đóng Full → Hoàn thuế cuối năm</h2>
+          <p class="header-note">Giả định: Không khai giảm trừ gia cảnh hàng tháng, quyết toán hoàn thuế cuối năm</p>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Mục</th>
+              <th>2025 (Hiện hành)</th>
+              <th>2026 (Dự thảo)</th>
+            </tr>
+          </thead>
+          <tbody id="refundBody">
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      <p>BHXH 8% · BHYT 1.5% · BHTN 1% · Trần BHXH/BHYT: 46.8M · Trần BHTN: <span id="bhtnCapDisplay">99.2M</span></p>
+      <button class="btn-link" onclick="toggleRegionNote()">📋 Xem danh sách vùng lương</button>
+    </footer>
+  </div>
+
+  <div class="modal" id="regionModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Mức lương tối thiểu vùng (từ 01/07/2024)</h3>
+        <button class="modal-close" onclick="toggleRegionNote()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="region-info">
+          <div class="region-card">
+            <h4>Vùng I - 4.960.000đ/tháng</h4>
+            <p>TP.HCM, Hà Nội, Hải Phòng, Đồng Nai, Bình Dương, Bà Rịa-Vũng Tàu, Long An, Quảng Ninh (phần lớn)...</p>
+          </div>
+          <div class="region-card">
+            <h4>Vùng II - 4.410.000đ/tháng</h4>
+            <p>Đà Nẵng, Cần Thơ, Bắc Ninh, Hưng Yên, Vĩnh Phúc, Thái Nguyên, Khánh Hòa, Lâm Đồng, Bình Thuận (một phần)...</p>
+          </div>
+          <div class="region-card">
+            <h4>Vùng III - 3.860.000đ/tháng</h4>
+            <p>Huế, Quảng Nam, Quảng Ngãi, Bình Định, Phú Yên, Đắk Lắk, Đắk Nông, Gia Lai, Kon Tum, Hà Tĩnh...</p>
+          </div>
+          <div class="region-card">
+            <h4>Vùng IV - 3.450.000đ/tháng</h4>
+            <p>Cao Bằng, Bắc Kạn, Hà Giang, Lai Châu, Điện Biên, Sơn La, Yên Bái, các huyện vùng sâu vùng xa...</p>
+          </div>
+        </div>
+        <p class="note">* Trần BHTN = 20 × Lương tối thiểu vùng. Chi tiết theo Nghị định 74/2024/NĐ-CP.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+
