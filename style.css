@@ -429,6 +429,15 @@ footer a {
   }
 }
 
+.footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
 .btn-link {
   background: none;
   border: none;
@@ -436,13 +445,36 @@ footer a {
   cursor: pointer;
   font-size: 0.85rem;
   padding: 0.5rem;
-  margin-top: 0.5rem;
   transition: opacity 0.2s;
 }
 
 .btn-link:hover {
   opacity: 0.8;
   text-decoration: underline;
+}
+
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.85rem;
+  padding: 0.5rem;
+  transition: color 0.2s;
+}
+
+.github-link:hover {
+  color: var(--text-primary);
+}
+
+.github-link svg {
+  flex-shrink: 0;
+}
+
+.footer-divider {
+  color: var(--text-secondary);
+  opacity: 0.5;
 }
 
 /* Modal */
