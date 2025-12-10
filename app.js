@@ -379,3 +379,7 @@ document.getElementById('regionModal').addEventListener('click', function(e) {
   }
 });
 
+// Expose to global for onclick handlers
+window.calculate = calculate;
+window.toggleRegionNote = toggleRegionNote;
+
