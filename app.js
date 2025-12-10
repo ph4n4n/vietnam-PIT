@@ -13,9 +13,10 @@ const TAX_CONFIG = {
   },
 
   // Employer insurance rates
-  bhxhCompany: { rate: 0.175, cap: 46_800_000 },
-  bhytCompany: { rate: 0.03, cap: 46_800_000 },
-  bhtnCompany: { rate: 0.01 },  // cap depends on region
+  bhxhCompany: { rate: 0.17, cap: 46_800_000 },  // BHXH 17%
+  bhnnCompany: { rate: 0.005, cap: 46_800_000 }, // BH tai nạn LĐ - Bệnh nghề nghiệp 0.5%
+  bhytCompany: { rate: 0.03, cap: 46_800_000 },  // BHYT 3%
+  bhtnCompany: { rate: 0.01 },  // BHTN 1%, cap depends on region
 
   personalDeduction: { old: 11_000_000, new: 15_500_000 },
   dependentDeduction: { old: 4_400_000, new: 6_200_000 },
@@ -49,6 +50,26 @@ function calculateProgressiveTax(taxableIncome, brackets) {
     prev = threshold;
   }
   return tax;
+}
+
+// Calculate tax breakdown by bracket
+function calculateTaxBreakdown(taxableIncome, brackets) {
+  const breakdown = [];
+  let prev = 0;
+  for (const [threshold, rate] of brackets) {
+    const taxable = Math.min(taxableIncome, threshold) - prev;
+    const tax = taxable > 0 ? taxable * rate : 0;
+    breakdown.push({
+      from: prev,
+      to: threshold === Infinity ? null : threshold,
+      rate,
+      taxable: Math.max(0, taxable),
+      tax
+    });
+    prev = threshold;
+    if (taxableIncome <= threshold) break;
+  }
+  return breakdown;
 }
 
 function calcInsurance(income, rate, cap) {
@@ -85,6 +106,10 @@ function calculatePIT(grossIncome, dependents) {
   const taxOld = calculateProgressiveTax(taxableOld, cfg.bracketsOld);
   const taxNew = calculateProgressiveTax(taxableNew, cfg.bracketsNew);
 
+  // Tax breakdown by bracket
+  const breakdownOld = calculateTaxBreakdown(taxableOld, cfg.bracketsOld);
+  const breakdownNew = calculateTaxBreakdown(taxableNew, cfg.bracketsNew);
+
   // Tax with only personal deduction (no dependent deduction) - monthly withholding
   // Company MUST deduct personal deduction, only dependent deduction can be claimed at year-end
   const taxableSelfOnlyOld = Math.max(0, incomeAfterInsurance - cfg.personalDeduction.old);
@@ -106,6 +131,8 @@ function calculatePIT(grossIncome, dependents) {
     taxableNew,
     taxOld,
     taxNew,
+    breakdownOld,
+    breakdownNew,
     taxSelfOnlyOld,
     taxSelfOnlyNew,
     taxSaved: taxOld - taxNew,
@@ -143,13 +170,21 @@ function formatMoney(n) {
   return n.toLocaleString('vi-VN') + ' ₫';
 }
 
-// Calculate company insurance
-function calcCompanyInsurance(income) {
+// Calculate company insurance (detailed)
+function calcCompanyInsuranceDetail(income) {
   const cfg = TAX_CONFIG;
   const bhtnCap = getBhtnCap();
-  return calcInsurance(income, cfg.bhxhCompany.rate, cfg.bhxhCompany.cap)
-       + calcInsurance(income, cfg.bhytCompany.rate, cfg.bhytCompany.cap)
-       + calcInsurance(income, cfg.bhtnCompany.rate, bhtnCap);
+  const bhxh = calcInsurance(income, cfg.bhxhCompany.rate, cfg.bhxhCompany.cap);
+  const bhnn = calcInsurance(income, cfg.bhnnCompany.rate, cfg.bhnnCompany.cap);
+  const bhyt = calcInsurance(income, cfg.bhytCompany.rate, cfg.bhytCompany.cap);
+  const bhtn = calcInsurance(income, cfg.bhtnCompany.rate, bhtnCap);
+  return {
+    bhxh,
+    bhnn,
+    bhyt,
+    bhtn,
+    total: bhxh + bhnn + bhyt + bhtn
+  };
 }
 
 // N→G mode: Net thực nhận = input, thuế tính trên input (thay vì Gross thực)
@@ -162,10 +197,10 @@ function renderNetAsGross(netAmount, dependents) {
   const correct = calculatePIT(realGross, dependents);
 
   // Chi phí công ty (Gross + BH công ty)
-  const wrongCompanyBH = calcCompanyInsurance(netAmount);
+  const wrongCompanyBH = calcCompanyInsuranceDetail(netAmount).total;
   const wrongCompanyCost = netAmount + wrongCompanyBH + wrong.taxOld;
 
-  const correctCompanyBH = calcCompanyInsurance(realGross);
+  const correctCompanyBH = calcCompanyInsuranceDetail(realGross).total;
   const correctCompanyCost = realGross + correctCompanyBH;
 
   const companySaved = correctCompanyCost - wrongCompanyCost;
@@ -323,6 +358,70 @@ function calculate() {
       <td class="saved-value">${formatMoney(refundNew)}</td>
     </tr>
   `;
+
+  // Render tax breakdown
+  const renderBreakdown = (breakdown, isNew) => {
+    const brackets = isNew ? TAX_CONFIG.bracketsNew : TAX_CONFIG.bracketsOld;
+    return brackets.map((b, i) => {
+      const item = breakdown[i] || { tax: 0 };
+      const fromLabel = i === 0 ? 'Đến' : `Trên ${formatMoney(brackets[i-1][0]).replace(' ₫', '')} đến`;
+      const toLabel = b[0] === Infinity ? '' : ` ${formatMoney(b[0]).replace(' ₫', '')}`;
+      const label = b[0] === Infinity ? `Trên ${formatMoney(brackets[i-1][0]).replace(' ₫', '')}` : `${fromLabel}${toLabel}`;
+      const hasTax = item.tax > 0;
+      return `
+        <tr class="${hasTax ? 'has-tax' : 'no-tax'}">
+          <td>${label}</td>
+          <td>${Math.round(b[1] * 100)}%</td>
+          <td>${formatMoney(item.tax)}</td>
+        </tr>
+      `;
+    }).join('');
+  };
+
+  document.getElementById('breakdownOldBody').innerHTML = renderBreakdown(r.breakdownOld, false);
+  document.getElementById('breakdownNewBody').innerHTML = renderBreakdown(r.breakdownNew, true);
+
+  // Employer cost section
+  const employer = calcCompanyInsuranceDetail(r.grossIncome);
+  const totalEmployerCost = r.grossIncome + employer.total;
+  
+  document.getElementById('employerBody').innerHTML = `
+    <tr>
+      <td class="col-label">Lương GROSS</td>
+      <td class="col-new">${formatMoney(r.grossIncome)}</td>
+    </tr>
+    <tr class="info-row">
+      <td class="col-label">└ BHXH (17%)</td>
+      <td>${formatMoney(employer.bhxh)}</td>
+    </tr>
+    <tr class="info-row">
+      <td class="col-label">└ BH tai nạn LĐ - Bệnh nghề nghiệp (0.5%)</td>
+      <td>${formatMoney(employer.bhnn)}</td>
+    </tr>
+    <tr class="info-row">
+      <td class="col-label">└ BHYT (3%)</td>
+      <td>${formatMoney(employer.bhyt)}</td>
+    </tr>
+    <tr class="info-row">
+      <td class="col-label">└ BHTN (1%)</td>
+      <td>${formatMoney(employer.bhtn)}</td>
+    </tr>
+    <tr>
+      <td class="col-label">Tổng BH doanh nghiệp (21.5%)</td>
+      <td class="col-new">${formatMoney(employer.total)}</td>
+    </tr>
+    <tr class="highlight-row">
+      <td class="col-label">💼 TỔNG CHI PHÍ DN/THÁNG</td>
+      <td class="saved-value">${formatMoney(totalEmployerCost)}</td>
+    </tr>
+    <tr class="highlight-row">
+      <td class="col-label">📅 TỔNG CHI PHÍ DN/NĂM</td>
+      <td class="saved-value">${formatMoney(totalEmployerCost * 12)}</td>
+    </tr>
+  `;
+
+  document.getElementById('employerSection').classList.add('show');
+  document.getElementById('breakdownSection').classList.add('show');
   document.getElementById('refundSection').classList.add('show');
   document.getElementById('resultSection').classList.add('show');
 }

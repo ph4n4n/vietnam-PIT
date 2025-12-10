@@ -13,12 +13,20 @@ Công cụ tính thuế Thu nhập Cá nhân (TNCN) Việt Nam - So sánh giữa
 
 ## 📊 Thông số thuế
 
-### Bảo hiểm bắt buộc (Người lao động)
+### Bảo hiểm bắt buộc (Người lao động - 10.5%)
 | Loại | Tỷ lệ | Trần                      |
 | ---- | ----- | ------------------------- |
 | BHXH | 8%    | 46.8M                     |
 | BHYT | 1.5%  | 46.8M                     |
 | BHTN | 1%    | 20 × Lương tối thiểu vùng |
+
+### Bảo hiểm doanh nghiệp đóng (21.5%)
+| Loại                             | Tỷ lệ | Trần                      |
+| -------------------------------- | ----- | ------------------------- |
+| BHXH                             | 17%   | 46.8M                     |
+| BH tai nạn LĐ - Bệnh nghề nghiệp | 0.5%  | 46.8M                     |
+| BHYT                             | 3%    | 46.8M                     |
+| BHTN                             | 1%    | 20 × Lương tối thiểu vùng |
 
 ### Giảm trừ gia cảnh
 | Mục             | 2025        | 2026        |
