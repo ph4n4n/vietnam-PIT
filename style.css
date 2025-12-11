@@ -240,6 +240,65 @@ h1 {
   transform: translateY(0);
 }
 
+.btn-secondary {
+  background: var(--bg-card);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.btn-secondary:hover {
+  background: var(--accent);
+  color: var(--bg-primary);
+}
+
+/* Compare section */
+.compare-section {
+  margin-top: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.compare-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--bg-card);
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+
+.compare-header:hover {
+  color: var(--text-primary);
+}
+
+.compare-toggle {
+  transition: transform 0.2s;
+}
+
+.compare-section.open .compare-toggle {
+  transform: rotate(180deg);
+}
+
+.compare-body {
+  display: none;
+  padding: 1rem;
+  gap: 1rem;
+  flex-direction: column;
+}
+
+.compare-section.open .compare-body {
+  display: flex;
+}
+
+.compare-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .result-section {
   display: none;
   animation: fadeIn 0.4s ease;
@@ -271,6 +330,38 @@ h1 {
 .result-header h2 {
   font-size: 1.1rem;
   font-weight: 600;
+}
+
+.result-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.share-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-family: inherit;
+  background: var(--bg-primary);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.share-btn:hover {
+  background: var(--accent);
+  color: var(--bg-primary);
+}
+
+.share-btn.copied {
+  background: var(--success);
+  border-color: var(--success);
+  color: var(--bg-primary);
 }
 
 .header-note {

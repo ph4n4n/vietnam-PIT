@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#22d3ee">
+  <meta name="description" content="Công cụ tính thuế thu nhập cá nhân Việt Nam - So sánh 2025 vs 2026">
   <title>Tính Thuế TNCN 2025 vs 2026</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -23,7 +27,6 @@
             <div class="toggle-group">
               <button type="button" class="toggle-btn active" data-type="gross">Gross</button>
               <button type="button" class="toggle-btn" data-type="net">Net</button>
-              <!-- <button type="button" class="toggle-btn" data-type="net-as-gross" title="Lấy Net làm Gross tính thuế">N→G</button> -->
             </div>
           </div>
         </div>
@@ -31,6 +34,10 @@
           <div class="form-group">
             <label for="dependents">Số người phụ thuộc</label>
             <input type="number" id="dependents" value="0" min="0" max="20">
+          </div>
+          <div class="form-group form-group-sm">
+            <label for="bonusMonths">Tháng 13, bonus</label>
+            <input type="number" id="bonusMonths" value="0" min="0" max="12" placeholder="0">
           </div>
           <div class="form-group form-group-sm">
             <label for="region">Vùng lương</label>
@@ -43,13 +50,44 @@
           </div>
           <button class="btn" onclick="calculate()">Tính thuế</button>
         </div>
+        
+        <div class="compare-section">
+          <div class="compare-header" onclick="toggleCompare()">
+            <span>📊 So sánh nhiều mức lương</span>
+            <span class="compare-toggle" id="compareToggle">▼</span>
+          </div>
+          <div class="compare-body" id="compareBody">
+            <div class="form-group">
+              <label>Nhập các mức lương (cách nhau bởi dấu phẩy)</label>
+              <input type="text" id="compareInput" placeholder="30,000,000 ; 40,000,000 ; 50,000,000" inputmode="text">
+            </div>
+            <button class="btn btn-secondary" onclick="compareMultiple()">So sánh</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="result-section" id="compareSection">
+      <div class="result-card">
+        <div class="result-header">
+          <h2>📊 So sánh các mức lương</h2>
+        </div>
+        <div class="compare-table-wrapper">
+          <table id="compareTable">
+            <thead id="compareHead"></thead>
+            <tbody id="compareBody2"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
     <section class="result-section" id="resultSection">
       <div class="result-card">
         <div class="result-header">
-          <h2>📊 Kết quả tính thuế</h2>
+          <div class="result-header-row">
+            <h2>📊 Kết quả tính thuế</h2>
+            <button id="shareBtn" class="share-btn" onclick="copyShareUrl()">🔗 Copy link</button>
+          </div>
         </div>
         <table>
           <thead>
@@ -117,6 +155,26 @@
             </tr>
           </thead>
           <tbody id="employerBody">
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="result-section" id="yearlySection">
+      <div class="result-card">
+        <div class="result-header">
+          <h2>📅 Tổng kết năm (có Bonus)</h2>
+          <p class="header-note">Thu nhập cả năm = 12 tháng lương + bonus</p>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Mục</th>
+              <th>2025</th>
+              <th>2026</th>
+            </tr>
+          </thead>
+          <tbody id="yearlyBody">
           </tbody>
         </table>
       </div>
@@ -191,6 +249,7 @@
   </div>
 
   <script src="app.js"></script>
+  <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
   <script defer src="https://va.vercel-scripts.com/v1/script.js"></script>
   <script defer src="https://vitals.vercel-scripts.com/v1/script.js"></script>
 </body>
