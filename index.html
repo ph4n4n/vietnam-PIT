@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,198 +8,251 @@
   <meta name="description" content="Công cụ tính thuế thu nhập cá nhân Việt Nam - So sánh 2025 vs 2026">
   <title>Tính Thuế TNCN 2025 vs 2026</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
   <div class="container">
     <header>
-      <h1>Tính Thuế Thu Nhập Cá Nhân Việt Nam</h1>
-      <p class="subtitle">So sánh Luật thuế 2025 về trước vs <a href="https://xaydungchinhsach.chinhphu.vn/nghi-quyet-110-2025-ubtvqh15-dieu-chinh-muc-giam-tru-gia-canh-cua-thue-thu-nhap-ca-nhan-119251110101313787.htm" target="_blank" class="official-link">Nghị quyết 110/2025/UBTVQH15</a> (áp dụng từ 1/1/2026)</p>
+      <a href="/">
+        <h1>Tính Thuế Thu Nhập Cá Nhân Việt Nam</h1>
+      </a>
+      <p class="subtitle">So sánh Luật thuế 2025 về trước vs <a
+          href="https://xaydungchinhsach.chinhphu.vn/nghi-quyet-110-2025-ubtvqh15-dieu-chinh-muc-giam-tru-gia-canh-cua-thue-thu-nhap-ca-nhan-119251110101313787.htm"
+          target="_blank" class="official-link">Nghị quyết 110/2025/UBTVQH15</a> (áp dụng từ 1/1/2026)</p>
     </header>
 
-    <section class="input-section">
-      <div class="input-stack">
-        <div class="form-group">
-          <label id="incomeLabel">Thu nhập Gross (VNĐ/tháng)</label>
-          <div class="input-with-toggle">
-            <input type="text" id="incomeInput" placeholder="50,000,000" inputmode="numeric">
-            <div class="toggle-group">
-              <button type="button" class="toggle-btn active" data-type="gross">Gross</button>
-              <button type="button" class="toggle-btn" data-type="net">Net</button>
-            </div>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="dependents">Số người phụ thuộc</label>
-            <input type="number" id="dependents" value="0" min="0" max="20">
-          </div>
-          <div class="form-group form-group-sm">
-            <label for="bonusMonths">Tháng 13, bonus</label>
-            <input type="number" id="bonusMonths" value="0" min="0" max="12" placeholder="0">
-          </div>
-          <div class="form-group form-group-sm">
-            <label for="region">Vùng lương</label>
-            <select id="region">
-              <option value="1">Vùng I</option>
-              <option value="2">Vùng II</option>
-              <option value="3">Vùng III</option>
-              <option value="4">Vùng IV</option>
-            </select>
-          </div>
-          <button class="btn" onclick="calculate()">Tính thuế</button>
-        </div>
-        
-        <div class="compare-section">
-          <div class="compare-header" onclick="toggleCompare()">
-            <span>📊 So sánh nhiều mức lương</span>
-            <span class="compare-toggle" id="compareToggle">▼</span>
-          </div>
-          <div class="compare-body" id="compareBody">
-            <div class="form-group">
-              <label>Nhập các mức lương (cách nhau bởi dấu phẩy)</label>
-              <input type="text" id="compareInput" placeholder="30,000,000 ; 40,000,000 ; 50,000,000" inputmode="text">
-            </div>
-            <button class="btn btn-secondary" onclick="compareMultiple()">So sánh</button>
-          </div>
-        </div>
-      </div>
-    </section>
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="main" onclick="switchTab('main')">🧮 Tính thuế</button>
+      <button class="tab-btn" data-tab="compare" onclick="switchTab('compare')">📊 So sánh lương</button>
+    </nav>
 
-    <section class="result-section" id="compareSection">
-      <div class="result-card">
-        <div class="result-header">
-          <h2>📊 So sánh các mức lương</h2>
+    <!-- Tab: Main Calculator -->
+    <div class="tab-panel active" id="tab-main">
+      <section class="input-section">
+        <div class="input-stack">
+          <div class="form-group">
+            <label id="incomeLabel">Thu nhập Gross (VNĐ/tháng)</label>
+            <div class="input-with-toggle">
+              <input type="text" id="incomeInput" placeholder="50,000,000" inputmode="numeric">
+              <div class="toggle-group">
+                <button type="button" class="toggle-btn active" data-type="gross">Gross</button>
+                <button type="button" class="toggle-btn" data-type="net">Net</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="dependents">Số người phụ thuộc</label>
+              <input type="number" id="dependents" value="0" min="0" max="20">
+            </div>
+            <div class="form-group form-group-sm">
+              <label for="bonusMonths">Tháng 13, bonus</label>
+              <input type="number" id="bonusMonths" value="0" min="0" max="12" placeholder="0">
+            </div>
+            <div class="form-group form-group-sm">
+              <label for="region">Vùng lương</label>
+              <select id="region">
+                <option value="1">Vùng I</option>
+                <option value="2">Vùng II</option>
+                <option value="3">Vùng III</option>
+                <option value="4">Vùng IV</option>
+              </select>
+            </div>
+            <button class="btn" onclick="calculate()">Tính thuế</button>
+          </div>
+
+          <div class="history-section">
+            <div class="history-header">
+              <div class="history-title">
+                <span>🕐 Lịch sử</span>
+                <span class="history-privacy" id="historyPrivacy">🔒 Chúng tôi đảm bảo chỉ lưu trữ lịch sử tính toán
+                  trên trình duyệt của bạn, không gửi lên server dưới mọi hình thức</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="historyEnabled" checked onchange="setHistoryEnabled(this.checked)">
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+            <div class="history-list-wrapper" id="historyWrapper">
+              <div class="history-list" id="historyList"></div>
+              <button class="history-clear" id="historyClearBtn" onclick="confirmClearHistory()" title="Xóa tất cả">🗑️
+                Xóa</button>
+            </div>
+          </div>
         </div>
-        <div class="compare-table-wrapper">
-          <table id="compareTable">
-            <thead id="compareHead"></thead>
-            <tbody id="compareBody2"></tbody>
+      </section>
+
+      <section class="result-section" id="resultSection">
+        <div class="result-card">
+          <div class="result-header">
+            <div class="result-header-row">
+              <h2>📊 Kết quả tính thuế</h2>
+              <div class="result-actions">
+                <!-- <button class="share-btn" onclick="exportAsImage()">📷 Lưu ảnh</button> -->
+                <button id="shareBtn" class="share-btn" onclick="copyShareUrl()">🔗 Copy link</button>
+              </div>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Mục</th>
+                <th>2025</th>
+                <th>2026</th>
+              </tr>
+            </thead>
+            <tbody id="resultBody">
+            </tbody>
           </table>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="result-section" id="resultSection">
-      <div class="result-card">
-        <div class="result-header">
-          <div class="result-header-row">
-            <h2>📊 Kết quả tính thuế</h2>
-            <button id="shareBtn" class="share-btn" onclick="copyShareUrl()">🔗 Copy link</button>
+      <section class="result-section" id="breakdownSection">
+        <div class="result-card">
+          <div class="result-header">
+            <h2>📋 Chi tiết thuế lũy tiến</h2>
+          </div>
+          <div class="breakdown-tables">
+            <div class="breakdown-col">
+              <h4>Biểu thuế 2025 (7 bậc)</h4>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Mức chịu thuế</th>
+                    <th>Số tiền</th>
+                    <th>Thuế suất</th>
+                    <th>Tiền nộp</th>
+                  </tr>
+                </thead>
+                <tbody id="breakdownOldBody"></tbody>
+              </table>
+            </div>
+            <div class="breakdown-col">
+              <h4>Biểu thuế 2026 (5 bậc)</h4>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Mức chịu thuế</th>
+                    <th>Số tiền</th>
+                    <th>Thuế suất</th>
+                    <th>Tiền nộp</th>
+                  </tr>
+                </thead>
+                <tbody id="breakdownNewBody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Mục</th>
-              <th>2025</th>
-              <th>2026</th>
-            </tr>
-          </thead>
-          <tbody id="resultBody">
-          </tbody>
-        </table>
-      </div>
-    </section>
+      </section>
 
-    <section class="result-section" id="breakdownSection">
-      <div class="result-card">
-        <div class="result-header">
-          <h2>📋 Chi tiết thuế lũy tiến</h2>
+      <section class="result-section" id="employerSection">
+        <div class="result-card">
+          <div class="result-header">
+            <h2>🏢 Chi phí Doanh nghiệp</h2>
+            <p class="header-note">Tổng chi phí người sử dụng lao động phải trả</p>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Mục</th>
+                <th>Số tiền</th>
+              </tr>
+            </thead>
+            <tbody id="employerBody">
+            </tbody>
+          </table>
         </div>
-        <div class="breakdown-tables">
-          <div class="breakdown-col">
-            <h4>Biểu thuế 2025 (7 bậc)</h4>
-            <table>
-              <thead>
-                <tr>
-                  <th>Mức chịu thuế</th>
-                  <th>Số tiền</th>
-                  <th>Thuế suất</th>
-                  <th>Tiền nộp</th>
-                </tr>
-              </thead>
-              <tbody id="breakdownOldBody"></tbody>
+      </section>
+
+      <section class="result-section" id="yearlySection">
+        <div class="result-card">
+          <div class="result-header">
+            <h2>📅 Tổng kết năm (có Bonus)</h2>
+            <p class="header-note">Thu nhập cả năm = 12 tháng lương + bonus</p>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Mục</th>
+                <th>2025</th>
+                <th>2026</th>
+              </tr>
+            </thead>
+            <tbody id="yearlyBody">
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="result-section" id="refundSection">
+        <div class="result-card refund-card">
+          <div class="result-header">
+            <h2>🧾 Hoàn thuế nhờ NPT</h2>
+            <p class="header-note">Giả định: Chưa đăng ký NPT hàng tháng, quyết toán cuối năm để hoàn thuế</p>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Mục</th>
+                <th>2025</th>
+                <th>2026</th>
+              </tr>
+            </thead>
+            <tbody id="refundBody">
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div><!-- End tab-main -->
+
+    <!-- Tab: Compare Salaries -->
+    <div class="tab-panel" id="tab-compare">
+      <section class="input-section">
+        <div class="input-stack">
+          <div class="form-group">
+            <label>Nhập các mức lương Gross để so sánh</label>
+            <input type="text" id="compareInput" placeholder="30,000,000 ; 40,000,000 ; 50,000,000" inputmode="text">
+            <p class="input-hint">Phân tách bằng dấu ; hoặc , (tối đa 5 mức)</p>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="compareDependents">Số người phụ thuộc</label>
+              <input type="number" id="compareDependents" value="0" min="0" max="20">
+            </div>
+            <div class="form-group form-group-sm">
+              <label for="compareRegion">Vùng lương</label>
+              <select id="compareRegion">
+                <option value="1">Vùng I</option>
+                <option value="2">Vùng II</option>
+                <option value="3">Vùng III</option>
+                <option value="4">Vùng IV</option>
+              </select>
+            </div>
+            <button class="btn" onclick="compareMultiple()">So sánh</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="result-section" id="compareSection">
+        <div class="result-card">
+          <div class="result-header">
+            <h2>📊 So sánh các mức lương (2026)</h2>
+          </div>
+          <div class="compare-table-wrapper">
+            <table id="compareTable">
+              <thead id="compareHead"></thead>
+              <tbody id="compareBody2"></tbody>
             </table>
           </div>
-          <div class="breakdown-col">
-            <h4>Biểu thuế 2026 (5 bậc)</h4>
-            <table>
-              <thead>
-                <tr>
-                  <th>Mức chịu thuế</th>
-                  <th>Số tiền</th>
-                  <th>Thuế suất</th>
-                  <th>Tiền nộp</th>
-                </tr>
-              </thead>
-              <tbody id="breakdownNewBody"></tbody>
-            </table>
-          </div>
         </div>
-      </div>
-    </section>
-
-    <section class="result-section" id="employerSection">
-      <div class="result-card">
-        <div class="result-header">
-          <h2>🏢 Chi phí Doanh nghiệp</h2>
-          <p class="header-note">Tổng chi phí người sử dụng lao động phải trả</p>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Mục</th>
-              <th>Số tiền</th>
-            </tr>
-          </thead>
-          <tbody id="employerBody">
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="result-section" id="yearlySection">
-      <div class="result-card">
-        <div class="result-header">
-          <h2>📅 Tổng kết năm (có Bonus)</h2>
-          <p class="header-note">Thu nhập cả năm = 12 tháng lương + bonus</p>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Mục</th>
-              <th>2025</th>
-              <th>2026</th>
-            </tr>
-          </thead>
-          <tbody id="yearlyBody">
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="result-section" id="refundSection">
-      <div class="result-card refund-card">
-        <div class="result-header">
-          <h2>🧾 Hoàn thuế nhờ NPT</h2>
-          <p class="header-note">Giả định: Chưa đăng ký NPT hàng tháng, quyết toán cuối năm để hoàn thuế</p>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Mục</th>
-              <th>2025</th>
-              <th>2026</th>
-            </tr>
-          </thead>
-          <tbody id="refundBody">
-          </tbody>
-        </table>
-      </div>
-    </section>
+      </section>
+    </div><!-- End tab-compare -->
 
     <footer>
       <p>BHXH 8% · BHYT 1.5% · BHTN 1% · Trần BHXH/BHYT: 46.8M · Trần BHTN: <span id="bhtnCapDisplay">99.2M</span></p>
@@ -209,12 +263,14 @@
         <span class="footer-divider">·</span>
         <a href="https://github.com/ph4n4n/vietnam-PIT" target="_blank" class="github-link" title="View on GitHub">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
           </svg>
           ph4n4n
         </a>
       </div>
-      <p class="privacy-note">🔒 Trang web cam kết: Không quảng cáo · Không cookie · Không đăng nhập · Chỉ thu thập dữ liệu ẩn danh (lượt xem, hiệu năng) để cải thiện</p>
+      <p class="privacy-note">🔒 Trang web cam kết: Không quảng cáo · Không cookie · Không đăng nhập · Chỉ thu thập dữ
+        liệu ẩn danh (lượt xem, hiệu năng) để cải thiện</p>
     </footer>
   </div>
 
@@ -232,7 +288,8 @@
           </div>
           <div class="region-card">
             <h4>Vùng II - 4.410.000đ/tháng</h4>
-            <p>Đà Nẵng, Cần Thơ, Bắc Ninh, Hưng Yên, Vĩnh Phúc, Thái Nguyên, Khánh Hòa, Lâm Đồng, Bình Thuận (một phần)...</p>
+            <p>Đà Nẵng, Cần Thơ, Bắc Ninh, Hưng Yên, Vĩnh Phúc, Thái Nguyên, Khánh Hòa, Lâm Đồng, Bình Thuận (một
+              phần)...</p>
           </div>
           <div class="region-card">
             <h4>Vùng III - 3.860.000đ/tháng</h4>
@@ -248,10 +305,11 @@
     </div>
   </div>
 
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
   <script src="app.js"></script>
   <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
   <script defer src="https://va.vercel-scripts.com/v1/script.js"></script>
   <script defer src="https://vitals.vercel-scripts.com/v1/script.js"></script>
 </body>
-</html>
 
+</html>

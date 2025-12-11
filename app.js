@@ -40,6 +40,125 @@ const TAX_CONFIG = {
 
 let incomeType = 'gross';
 
+// History management
+const HISTORY_KEY = 'pit_calc_history';
+const HISTORY_ENABLED_KEY = 'pit_calc_history_enabled';
+const MAX_HISTORY = 10;
+
+function isHistoryEnabled() {
+  return localStorage.getItem(HISTORY_ENABLED_KEY) !== 'false';
+}
+
+function setHistoryEnabled(enabled) {
+  localStorage.setItem(HISTORY_ENABLED_KEY, enabled ? 'true' : 'false');
+  renderHistory();
+}
+
+function getHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveToHistory(params) {
+  if (!isHistoryEnabled()) return;
+  
+  const history = getHistory();
+  const entry = {
+    ...params,
+    timestamp: Date.now(),
+    id: Date.now().toString(36),
+  };
+  
+  // Remove duplicate (same params)
+  const filtered = history.filter(h => 
+    !(h.income === params.income && h.type === params.type && 
+      h.dependents === params.dependents && h.bonus === params.bonus)
+  );
+  
+  filtered.unshift(entry);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(filtered.slice(0, MAX_HISTORY)));
+  renderHistory();
+}
+
+function loadFromHistory(id) {
+  const history = getHistory();
+  const entry = history.find(h => h.id === id);
+  if (!entry) return;
+  
+  document.getElementById('incomeInput').value = parseInt(entry.income, 10).toLocaleString('vi-VN');
+  document.getElementById('dependents').value = entry.dependents;
+  document.getElementById('bonusMonths').value = entry.bonus || 0;
+  document.getElementById('region').value = entry.region;
+  
+  if (entry.type && ['gross', 'net'].includes(entry.type)) {
+    incomeType = entry.type;
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.type === entry.type);
+    });
+  }
+  
+  updateBhtnCapDisplay();
+  calculate();
+}
+
+function clearHistory() {
+  localStorage.removeItem(HISTORY_KEY);
+  renderHistory();
+}
+
+function confirmClearHistory() {
+  if (confirm('Xóa toàn bộ lịch sử tính thuế?')) {
+    clearHistory();
+  }
+}
+
+function renderHistory() {
+  const container = document.getElementById('historyList');
+  if (!container) return;
+  
+  const enabled = isHistoryEnabled();
+  const checkbox = document.getElementById('historyEnabled');
+  if (checkbox) checkbox.checked = enabled;
+  
+  // Show/hide privacy note and wrapper
+  const privacyNote = document.getElementById('historyPrivacy');
+  const wrapper = document.getElementById('historyWrapper');
+  const clearBtn = document.getElementById('historyClearBtn');
+  
+  if (privacyNote) privacyNote.style.display = enabled ? 'block' : 'none';
+  if (wrapper) wrapper.style.display = enabled ? 'flex' : 'none';
+  
+  if (!enabled) {
+    container.innerHTML = '';
+    return;
+  }
+  
+  // Show/hide clear button based on history length
+  const history = getHistory();
+  if (clearBtn) clearBtn.style.display = history.length > 0 ? 'block' : 'none';
+  
+  if (history.length === 0) {
+    container.innerHTML = '<p class="history-empty">Chưa có lịch sử</p>';
+    return;
+  }
+  
+  container.innerHTML = history.map(h => {
+    const income = parseInt(h.income, 10).toLocaleString('vi-VN');
+    const type = h.type === 'net' ? 'Net' : 'Gross';
+    const dep = h.dependents > 0 ? `, ${h.dependents} NPT` : '';
+    const bonus = h.bonus > 0 ? `, +${h.bonus}th` : '';
+    return `
+      <button class="history-item" onclick="loadFromHistory('${h.id}')">
+        <span class="history-value">${income}đ</span>
+        <span class="history-meta">${type}${dep}${bonus}</span>
+      </button>
+    `;
+  }).join('');
+}
+
 function calculateProgressiveTax(taxableIncome, brackets) {
   if (taxableIncome <= 0) return 0;
   let tax = 0, prev = 0;
@@ -306,6 +425,7 @@ function calculate() {
   const inputValue = parseMoneyInput(document.getElementById('incomeInput').value);
   const dependents = parseInt(document.getElementById('dependents').value, 10) || 0;
   const region = getRegion();
+  const bonusMonths = parseInt(document.getElementById('bonusMonths').value, 10) || 0;
 
   if (inputValue <= 0) {
     alert('Vui lòng nhập thu nhập hợp lệ');
@@ -313,7 +433,10 @@ function calculate() {
   }
 
   // Update URL params for sharing
-  setUrlParams(inputValue, incomeType, dependents, region);
+  setUrlParams(inputValue, incomeType, dependents, region, bonusMonths);
+  
+  // Save to history
+  saveToHistory({ income: inputValue, type: incomeType, dependents, region, bonus: bonusMonths });
 
   // Handle N→G mode separately
   if (incomeType === 'net-as-gross') {
@@ -472,8 +595,6 @@ function calculate() {
   `;
 
   // Yearly calculation with bonus
-  const bonusMonths = parseInt(document.getElementById('bonusMonths').value, 10) || 0;
-  
   if (bonusMonths > 0) {
     const yearly = calculateYearlyPIT(grossIncome, dependents, bonusMonths);
     
@@ -561,6 +682,34 @@ document.getElementById('incomeInput').addEventListener('input', function() {
   }
 });
 
+// Format compare input on change (live formatting)
+document.getElementById('compareInput').addEventListener('input', function() {
+  const val = this.value;
+  
+  // Don't format if empty or user is typing separator
+  if (!val || val.endsWith(';') || val.endsWith(',') || val.endsWith(' ')) return;
+  
+  // Split by ; or , and format each part
+  const parts = val.split(/\s*[;,]\s*/);
+  const lastPart = parts[parts.length - 1];
+  
+  // Only format completed parts, leave last part as-is for typing
+  const formatted = parts.slice(0, -1).map(p => {
+    const num = parseInt(p.replace(/[^\d]/g, ''), 10);
+    return isNaN(num) ? '' : num.toLocaleString('vi-VN');
+  }).filter(p => p);
+  
+  // Format last part only if it has digits
+  const lastRaw = lastPart.replace(/[^\d]/g, '');
+  if (lastRaw) {
+    formatted.push(parseInt(lastRaw, 10).toLocaleString('vi-VN'));
+  }
+  
+  if (formatted.length > 0) {
+    this.value = formatted.join(' ; ');
+  }
+});
+
 // Enter to calculate
 document.querySelectorAll('input').forEach(input => {
   input.addEventListener('keypress', e => {
@@ -600,15 +749,17 @@ function getUrlParams() {
     type: params.get('type') || 'gross',
     dependents: params.get('dep'),
     region: params.get('region'),
+    bonus: params.get('bonus'),
   };
 }
 
-function setUrlParams(income, type, dependents, region) {
+function setUrlParams(income, type, dependents, region, bonus) {
   const params = new URLSearchParams();
   params.set('income', income);
   params.set('type', type);
   params.set('dep', dependents);
   params.set('region', region);
+  if (bonus > 0) params.set('bonus', bonus);
   const newUrl = `${window.location.pathname}?${params.toString()}`;
   window.history.replaceState({}, '', newUrl);
 }
@@ -624,6 +775,46 @@ function copyShareUrl() {
       btn.classList.remove('copied');
     }, 2000);
   });
+}
+
+async function exportAsImage() {
+  const resultSection = document.getElementById('resultSection');
+  if (!resultSection.classList.contains('show')) {
+    alert('Vui lòng tính thuế trước khi xuất ảnh');
+    return;
+  }
+  
+  try {
+    // Capture result + breakdown sections
+    const container = document.createElement('div');
+    container.style.cssText = 'background: #0f172a; padding: 20px; width: fit-content;';
+    
+    const sections = ['resultSection', 'breakdownSection', 'yearlySection'];
+    sections.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.classList.contains('show')) {
+        container.appendChild(el.cloneNode(true));
+      }
+    });
+    
+    document.body.appendChild(container);
+    
+    const canvas = await html2canvas(container, {
+      backgroundColor: '#0f172a',
+      scale: 2,
+    });
+    
+    document.body.removeChild(container);
+    
+    // Download
+    const link = document.createElement('a');
+    link.download = `thue-tncn-${new Date().toISOString().slice(0,10)}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch (err) {
+    console.error('Export failed:', err);
+    alert('Xuất ảnh thất bại. Vui lòng thử lại.');
+  }
 }
 
 function initFromUrl() {
@@ -651,20 +842,29 @@ function initFromUrl() {
       document.getElementById('region').value = params.region;
       updateBhtnCapDisplay();
     }
+    if (params.bonus) {
+      document.getElementById('bonusMonths').value = params.bonus;
+    }
     
     // Auto calculate
     setTimeout(calculate, 100);
   }
 }
 
-// Compare multiple salaries
-function toggleCompare() {
-  document.querySelector('.compare-section').classList.toggle('open');
+// Tab switching
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabName);
+  });
+  document.querySelectorAll('.tab-panel').forEach(panel => {
+    panel.classList.toggle('active', panel.id === `tab-${tabName}`);
+  });
 }
 
+// Compare multiple salaries
 function compareMultiple() {
   const input = document.getElementById('compareInput').value;
-  const dependents = parseInt(document.getElementById('dependents').value, 10) || 0;
+  const dependents = parseInt(document.getElementById('compareDependents').value, 10) || 0;
   
   // Parse input: support both ";" and "," as separators
   const salaries = input
@@ -750,6 +950,14 @@ initFromUrl();
 window.calculate = calculate;
 window.toggleRegionNote = toggleRegionNote;
 window.copyShareUrl = copyShareUrl;
-window.toggleCompare = toggleCompare;
+window.switchTab = switchTab;
 window.compareMultiple = compareMultiple;
+window.loadFromHistory = loadFromHistory;
+window.setHistoryEnabled = setHistoryEnabled;
+window.clearHistory = clearHistory;
+window.confirmClearHistory = confirmClearHistory;
+window.exportAsImage = exportAsImage;
+
+// Init history on load
+document.addEventListener('DOMContentLoaded', renderHistory);
 

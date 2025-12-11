@@ -24,6 +24,12 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
+  // Skip non-GET requests (POST, etc.)
+  if (e.request.method !== 'GET') return;
+  
+  // Skip external requests (analytics, etc.)
+  if (!e.request.url.startsWith(self.location.origin)) return;
+  
   // Network first, fallback to cache
   e.respondWith(
     fetch(e.request)
@@ -35,5 +41,3 @@ self.addEventListener('fetch', (e) => {
       .catch(() => caches.match(e.request))
   );
 });
-
-
