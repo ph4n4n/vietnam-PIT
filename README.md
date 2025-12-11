@@ -18,12 +18,12 @@ Chia sẻ link tính thuế với đồng nghiệp, HR:
 ```
 https://vietnam-pit.vercel.app?income=50000000&type=gross&dep=2&region=1
 ```
-| Param | Mô tả |
-|-------|-------|
+| Param    | Mô tả                  |
+| -------- | ---------------------- |
 | `income` | Số tiền (không có dấu) |
-| `type` | `gross` hoặc `net` |
-| `dep` | Số người phụ thuộc |
-| `region` | Vùng lương (1-4) |
+| `type`   | `gross` hoặc `net`     |
+| `dep`    | Số người phụ thuộc     |
+| `region` | Vùng lương (1-4)       |
 
 ### 📊 So sánh nhiều mức lương
 Đang đàm phán offer? Nhập nhiều mức lương để so sánh NET:
