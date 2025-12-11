@@ -64,6 +64,11 @@ npx html-minifier-terser \
   -o dist/index.html \
   dist/index.html
 
+# Copy PWA files
+echo "📱 Copying PWA files..."
+cp manifest.json dist/
+npx terser sw.js --compress --mangle -o dist/sw.js
+
 # Show sizes
 echo ""
 echo "✅ Build complete!"

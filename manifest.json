@@ -1,0 +1,17 @@
+{
+  "name": "Tính Thuế TNCN Việt Nam",
+  "short_name": "Thuế TNCN",
+  "description": "So sánh thuế thu nhập cá nhân 2025 vs 2026",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#22d3ee",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
+

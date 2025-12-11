@@ -141,6 +141,52 @@ function calculatePIT(grossIncome, dependents) {
   };
 }
 
+// Calculate yearly PIT with bonus (bonus taxed progressively with yearly income)
+function calculateYearlyPIT(monthlyGross, dependents, bonusMonths) {
+  const cfg = TAX_CONFIG;
+  const bhtnCap = getBhtnCap();
+
+  // Monthly insurance
+  const monthlyBhxh = calcInsurance(monthlyGross, cfg.bhxh.rate, cfg.bhxh.cap);
+  const monthlyBhyt = calcInsurance(monthlyGross, cfg.bhyt.rate, cfg.bhyt.cap);
+  const monthlyBhtn = calcInsurance(monthlyGross, cfg.bhtn.rate, bhtnCap);
+  const monthlyInsurance = monthlyBhxh + monthlyBhyt + monthlyBhtn;
+
+  // Bonus doesn't have insurance deduction (already paid on monthly salary)
+  const bonusGross = monthlyGross * bonusMonths;
+  
+  // Yearly totals
+  const yearlyGross = monthlyGross * 12 + bonusGross;
+  const yearlyInsurance = monthlyInsurance * 12;
+  const yearlyIncomeAfterInsurance = yearlyGross - yearlyInsurance;
+  
+  // Yearly deductions
+  const yearlyDeductionOld = (cfg.personalDeduction.old + cfg.dependentDeduction.old * dependents) * 12;
+  const yearlyDeductionNew = (cfg.personalDeduction.new + cfg.dependentDeduction.new * dependents) * 12;
+  
+  const yearlyTaxableOld = Math.max(0, yearlyIncomeAfterInsurance - yearlyDeductionOld);
+  const yearlyTaxableNew = Math.max(0, yearlyIncomeAfterInsurance - yearlyDeductionNew);
+  
+  const yearlyTaxOld = calculateProgressiveTax(yearlyTaxableOld, cfg.bracketsOld);
+  const yearlyTaxNew = calculateProgressiveTax(yearlyTaxableNew, cfg.bracketsNew);
+  
+  return {
+    yearlyGross,
+    bonusGross,
+    yearlyInsurance,
+    yearlyIncomeAfterInsurance,
+    yearlyDeductionOld,
+    yearlyDeductionNew,
+    yearlyTaxableOld,
+    yearlyTaxableNew,
+    yearlyTaxOld,
+    yearlyTaxNew,
+    yearlyNetOld: yearlyGross - yearlyInsurance - yearlyTaxOld,
+    yearlyNetNew: yearlyGross - yearlyInsurance - yearlyTaxNew,
+    yearlySaved: yearlyTaxOld - yearlyTaxNew,
+  };
+}
+
 // Binary search: find Gross from Net (using OLD tax as reference)
 function netToGross(targetNet, dependents) {
   let low = targetNet;
@@ -259,11 +305,15 @@ function parseMoneyInput(str) {
 function calculate() {
   const inputValue = parseMoneyInput(document.getElementById('incomeInput').value);
   const dependents = parseInt(document.getElementById('dependents').value, 10) || 0;
+  const region = getRegion();
 
   if (inputValue <= 0) {
     alert('Vui lòng nhập thu nhập hợp lệ');
     return;
   }
+
+  // Update URL params for sharing
+  setUrlParams(inputValue, incomeType, dependents, region);
 
   // Handle N→G mode separately
   if (incomeType === 'net-as-gross') {
@@ -421,6 +471,65 @@ function calculate() {
     </tr>
   `;
 
+  // Yearly calculation with bonus
+  const bonusMonths = parseInt(document.getElementById('bonusMonths').value, 10) || 0;
+  
+  if (bonusMonths > 0) {
+    const yearly = calculateYearlyPIT(grossIncome, dependents, bonusMonths);
+    
+    document.getElementById('yearlyBody').innerHTML = `
+      <tr>
+        <td class="col-label">Lương 12 tháng</td>
+        <td class="col-old">${formatMoney(grossIncome * 12)}</td>
+        <td class="col-new">${formatMoney(grossIncome * 12)}</td>
+      </tr>
+      <tr>
+        <td class="col-label">Bonus (${bonusMonths} tháng lương)</td>
+        <td class="col-old">${formatMoney(yearly.bonusGross)}</td>
+        <td class="col-new">${formatMoney(yearly.bonusGross)}</td>
+      </tr>
+      <tr>
+        <td class="col-label">Tổng thu nhập Gross/năm</td>
+        <td class="col-old">${formatMoney(yearly.yearlyGross)}</td>
+        <td class="col-new">${formatMoney(yearly.yearlyGross)}</td>
+      </tr>
+      <tr class="info-row">
+        <td class="col-label">└ Tổng BH bắt buộc/năm</td>
+        <td>${formatMoney(yearly.yearlyInsurance)}</td>
+        <td>${formatMoney(yearly.yearlyInsurance)}</td>
+      </tr>
+      <tr class="info-row">
+        <td class="col-label">└ Tổng giảm trừ/năm</td>
+        <td>${formatMoney(yearly.yearlyDeductionOld)}</td>
+        <td>${formatMoney(yearly.yearlyDeductionNew)}</td>
+      </tr>
+      <tr>
+        <td class="col-label">Thu nhập tính thuế/năm</td>
+        <td class="col-old">${formatMoney(yearly.yearlyTaxableOld)}</td>
+        <td class="col-new">${formatMoney(yearly.yearlyTaxableNew)}</td>
+      </tr>
+      <tr>
+        <td class="col-label">Thuế TNCN cả năm</td>
+        <td class="col-old">${formatMoney(yearly.yearlyTaxOld)}</td>
+        <td class="col-new">${formatMoney(yearly.yearlyTaxNew)}</td>
+      </tr>
+      <tr>
+        <td class="col-label">Thu nhập NET cả năm</td>
+        <td class="col-old">${formatMoney(yearly.yearlyNetOld)}</td>
+        <td class="col-new">${formatMoney(yearly.yearlyNetNew)}</td>
+      </tr>
+      <tr class="highlight-row">
+        <td class="col-label">💰 TIỀN THUẾ GIẢM/NĂM</td>
+        <td colspan="2" class="saved-value" style="text-align: center;">
+          ${yearly.yearlySaved >= 0 ? '+' : ''}${formatMoney(yearly.yearlySaved)}
+        </td>
+      </tr>
+    `;
+    document.getElementById('yearlySection').classList.add('show');
+  } else {
+    document.getElementById('yearlySection').classList.remove('show');
+  }
+
   document.getElementById('employerSection').classList.add('show');
   document.getElementById('breakdownSection').classList.add('show');
   document.getElementById('refundSection').classList.add('show');
@@ -483,7 +592,164 @@ document.getElementById('regionModal').addEventListener('click', function(e) {
   }
 });
 
+// URL params handling
+function getUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    income: params.get('income'),
+    type: params.get('type') || 'gross',
+    dependents: params.get('dep'),
+    region: params.get('region'),
+  };
+}
+
+function setUrlParams(income, type, dependents, region) {
+  const params = new URLSearchParams();
+  params.set('income', income);
+  params.set('type', type);
+  params.set('dep', dependents);
+  params.set('region', region);
+  const newUrl = `${window.location.pathname}?${params.toString()}`;
+  window.history.replaceState({}, '', newUrl);
+}
+
+function copyShareUrl() {
+  navigator.clipboard.writeText(window.location.href).then(() => {
+    const btn = document.getElementById('shareBtn');
+    const originalText = btn.textContent;
+    btn.textContent = '✓ Đã copy!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = originalText;
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+function initFromUrl() {
+  const params = getUrlParams();
+  if (params.income) {
+    document.getElementById('incomeInput').value = parseInt(params.income, 10).toLocaleString('vi-VN');
+    
+    // Set income type
+    if (params.type && ['gross', 'net'].includes(params.type)) {
+      incomeType = params.type;
+      document.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.type === params.type);
+      });
+      const labels = {
+        'gross': 'Thu nhập Gross (VNĐ/tháng)',
+        'net': 'Thu nhập Net (VNĐ/tháng)',
+      };
+      document.getElementById('incomeLabel').textContent = labels[params.type];
+    }
+    
+    if (params.dependents) {
+      document.getElementById('dependents').value = params.dependents;
+    }
+    if (params.region) {
+      document.getElementById('region').value = params.region;
+      updateBhtnCapDisplay();
+    }
+    
+    // Auto calculate
+    setTimeout(calculate, 100);
+  }
+}
+
+// Compare multiple salaries
+function toggleCompare() {
+  document.querySelector('.compare-section').classList.toggle('open');
+}
+
+function compareMultiple() {
+  const input = document.getElementById('compareInput').value;
+  const dependents = parseInt(document.getElementById('dependents').value, 10) || 0;
+  
+  // Parse input: support both ";" and "," as separators
+  const salaries = input
+    .split(/[;,]/)
+    .map(s => parseInt(s.replace(/[^\d]/g, ''), 10))
+    .filter(n => n > 0)
+    .slice(0, 5); // Max 5 salaries
+  
+  if (salaries.length < 2) {
+    alert('Vui lòng nhập ít nhất 2 mức lương để so sánh');
+    return;
+  }
+  
+  // Calculate for each salary
+  const results = salaries.map(gross => {
+    const r = calculatePIT(gross, dependents);
+    return { gross, ...r };
+  });
+  
+  // Render comparison table
+  renderCompareTable(results, dependents);
+}
+
+function renderCompareTable(results, dependents) {
+  const headRow = `
+    <tr>
+      <th>Mục</th>
+      ${results.map(r => `<th>${formatMoney(r.gross).replace(' ₫', '')}</th>`).join('')}
+    </tr>
+  `;
+  document.getElementById('compareHead').innerHTML = headRow;
+  
+  const rows = [
+    { label: 'Thu nhập Gross', key: 'grossIncome' },
+    { label: 'Tổng BH (10.5%)', key: 'insurance' },
+    { label: 'Giảm trừ bản thân', getValue: () => TAX_CONFIG.personalDeduction.new },
+    { label: `Giảm trừ NPT (×${dependents})`, getValue: () => TAX_CONFIG.dependentDeduction.new * dependents },
+    { label: 'Thu nhập tính thuế', key: 'taxableNew' },
+    { label: 'Thuế TNCN (2026)', key: 'taxNew', highlight: true },
+    { label: 'Thu nhập NET', key: 'netNew', highlight: true },
+  ];
+  
+  let html = rows.map(row => {
+    const cells = results.map(r => {
+      const value = row.key ? r[row.key] : row.getValue(r);
+      return `<td class="${row.highlight ? 'col-new' : ''}">${formatMoney(value)}</td>`;
+    }).join('');
+    return `
+      <tr class="${row.highlight ? 'highlight-row' : ''}">
+        <td class="col-label">${row.label}</td>
+        ${cells}
+      </tr>
+    `;
+  }).join('');
+  
+  // Add difference row (compared to first salary)
+  const firstNet = results[0].netNew;
+  const diffCells = results.map((r, i) => {
+    if (i === 0) return '<td>—</td>';
+    const diff = r.netNew - firstNet;
+    const sign = diff >= 0 ? '+' : '';
+    return `<td class="saved-value">${sign}${formatMoney(diff)}</td>`;
+  }).join('');
+  
+  html += `
+    <tr class="highlight-row">
+      <td class="col-label">💰 Chênh lệch NET</td>
+      ${diffCells}
+    </tr>
+  `;
+  
+  document.getElementById('compareBody2').innerHTML = html;
+  document.getElementById('compareSection').classList.add('show');
+  
+  // Scroll to results
+  document.getElementById('compareSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Init from URL on page load
+initFromUrl();
+
 // Expose to global for onclick handlers
 window.calculate = calculate;
 window.toggleRegionNote = toggleRegionNote;
+window.copyShareUrl = copyShareUrl;
+window.toggleCompare = toggleCompare;
+window.compareMultiple = compareMultiple;
 
