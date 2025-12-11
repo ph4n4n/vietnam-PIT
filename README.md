@@ -4,12 +4,44 @@ Công cụ tính thuế Thu nhập Cá nhân (TNCN) Việt Nam - So sánh giữa
 
 ## ✨ Tính năng
 
+### Core
 - Tính thuế TNCN từ thu nhập **Gross** hoặc **Net**
 - So sánh song song thuế 2025 vs 2026
 - Hỗ trợ 4 vùng lương tối thiểu
 - Tính số người phụ thuộc (giảm trừ gia cảnh)
 - Hiển thị tiền hoàn thuế cuối năm
+- Chi phí doanh nghiệp (tổng cost employer)
 - Giao diện responsive, hỗ trợ mobile
+
+### 🔗 Chia sẻ kết quả qua URL
+Chia sẻ link tính thuế với đồng nghiệp, HR:
+```
+https://vietnam-pit.vercel.app?income=50000000&type=gross&dep=2&region=1
+```
+| Param | Mô tả |
+|-------|-------|
+| `income` | Số tiền (không có dấu) |
+| `type` | `gross` hoặc `net` |
+| `dep` | Số người phụ thuộc |
+| `region` | Vùng lương (1-4) |
+
+### 📊 So sánh nhiều mức lương
+Đang đàm phán offer? Nhập nhiều mức lương để so sánh NET:
+```
+30,000,000 ; 40,000,000 ; 50,000,000
+```
+- Hỗ trợ 2-5 mức lương
+- Hiển thị chênh lệch NET so với mức đầu tiên
+
+### 💰 Bonus / Tháng 13
+- Nhập số tháng bonus (0-12)
+- Tính thuế lũy tiến theo năm (12 tháng lương + bonus)
+- Hiển thị tổng kết thu nhập cả năm
+
+### 📱 PWA - Cài đặt như app
+- Add to Home Screen trên mobile
+- Hoạt động offline sau lần load đầu
+- Icon và splash screen native
 
 ## 📊 Thông số thuế
 
