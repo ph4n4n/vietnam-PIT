@@ -80,5 +80,3 @@ MIT
 
 ## Author
 ph4n4n
-
-
