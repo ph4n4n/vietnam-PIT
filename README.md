@@ -1,4 +1,4 @@
-# 🧮 Vietnam PIT Calculator
+# 🧮 Vietnam PIT Calculator by ph4n4n
 
 Công cụ tính thuế Thu nhập Cá nhân (TNCN) Việt Nam - So sánh giữa Luật thuế 2025 và Luật thuế mới 2026.
 
