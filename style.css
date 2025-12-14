@@ -402,6 +402,38 @@ h1 {
   color: var(--bg-primary);
 }
 
+/* Scenario Toggle */
+.scenario-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: 0.75rem;
+}
+
+.scenario-btn {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: inherit;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.scenario-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--accent-dim);
+}
+
+.scenario-btn.active {
+  background: var(--success);
+  color: var(--bg-primary);
+  border-color: var(--success);
+}
+
 @media (max-width: 640px) {
   .input-with-toggle {
     flex-direction: column;
@@ -413,6 +445,12 @@ h1 {
 
   .toggle-group {
     border-radius: 10px;
+  }
+  
+  .scenario-toggle {
+    margin-left: 0;
+    margin-top: 0.5rem;
+    justify-content: center;
   }
 }
 
@@ -481,6 +519,46 @@ h1 {
   border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
+}
+
+/* Result Note */
+.result-note {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.note-info {
+  background: rgba(34, 211, 238, 0.1);
+  border: 1px solid var(--accent-dim);
+  border-radius: 8px;
+  padding: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.note-info strong {
+  color: var(--accent);
+}
+
+.note-warning {
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  padding: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.note-warning strong {
+  color: #fbbf24;
+}
+
+.note-warning small {
+  color: var(--text-secondary);
+  display: block;
+  margin-top: 0.5rem;
 }
 
 .result-header {

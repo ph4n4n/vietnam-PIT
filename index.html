@@ -44,6 +44,10 @@
                 <button type="button" class="toggle-btn active" data-type="gross">Gross</button>
                 <button type="button" class="toggle-btn" data-type="net">Net</button>
               </div>
+              <div class="scenario-toggle" id="scenarioToggle" style="display: none;">
+                <button type="button" class="scenario-btn active" data-scenario="keep-gross" title="DN giữ nguyên Gross, NLĐ hưởng lợi">📈 Giữ Gross</button>
+                <button type="button" class="scenario-btn" data-scenario="keep-net" title="DN giữ nguyên Net, DN tiết kiệm">💼 Giữ Net</button>
+              </div>
             </div>
           </div>
           <div class="form-row">
@@ -110,6 +114,7 @@
             <tbody id="resultBody">
             </tbody>
           </table>
+          <div class="result-note" id="resultNote" style="display: none;"></div>
         </div>
       </section>
 
