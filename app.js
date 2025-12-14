@@ -39,7 +39,6 @@ const TAX_CONFIG = {
 };
 
 let incomeType = 'gross';
-let netScenario = 'keep-gross'; // 'keep-gross' or 'keep-net'
 
 // History management
 const HISTORY_KEY = 'pit_calc_history';
@@ -307,22 +306,22 @@ function calculateYearlyPIT(monthlyGross, dependents, bonusMonths) {
   };
 }
 
-// Binary search: find Gross from Net
-function netToGross(targetNet, dependents, useNewTax = false) {
+// Binary search: find Gross from Net (using OLD tax as reference)
+function netToGross(targetNet, dependents) {
   let low = targetNet;
   let high = targetNet * 2;
-  const tolerance = 1; // Precise to 1 VND
+  const tolerance = 1000;
 
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 50; i++) {
     const mid = Math.floor((low + high) / 2);
     const result = calculatePIT(mid, dependents);
-    const net = useNewTax ? result.netNew : result.netOld;
+    const netOld = result.netOld;
 
-    if (Math.abs(net - targetNet) < tolerance) {
+    if (Math.abs(netOld - targetNet) < tolerance) {
       return mid;
     }
 
-    if (net < targetNet) {
+    if (netOld < targetNet) {
       low = mid;
     } else {
       high = mid;
@@ -333,7 +332,7 @@ function netToGross(targetNet, dependents, useNewTax = false) {
 }
 
 function formatMoney(n) {
-  return Math.round(n).toLocaleString('vi-VN') + ' ₫';
+  return n.toLocaleString('vi-VN') + ' ₫';
 }
 
 // Calculate company insurance (detailed)
@@ -445,56 +444,15 @@ function calculate() {
     return;
   }
 
-  // Convert based on income type and scenario
-  let grossOld, grossNew, r, rNew;
-  const noteEl = document.getElementById('resultNote');
-  
+  // Convert based on income type
+  let grossIncome;
   if (incomeType === 'net') {
-    if (netScenario === 'keep-gross') {
-      // Scenario A: DN giữ nguyên Gross, NLĐ hưởng lợi từ thuế giảm
-      grossOld = netToGross(inputValue, dependents, false);
-      grossNew = grossOld; // Same Gross for both years
-      r = calculatePIT(grossOld, dependents);
-      rNew = r; // Same calculation
-      
-      // Show note
-      noteEl.innerHTML = `
-        <div class="note-info">
-          <strong>📈 Kịch bản: DN giữ nguyên Gross</strong><br>
-          Nếu DN không điều chỉnh lương, NLĐ sẽ được hưởng lợi từ thuế giảm.<br>
-          Net 2026 cao hơn <strong>${formatMoney(r.netNew - r.netOld)}</strong>/tháng so với 2025.
-        </div>
-      `;
-      noteEl.style.display = 'block';
-    } else {
-      // Scenario B: DN giữ nguyên Net, DN tiết kiệm chi phí
-      grossOld = netToGross(inputValue, dependents, false);
-      grossNew = netToGross(inputValue, dependents, true);
-      r = calculatePIT(grossOld, dependents);
-      rNew = calculatePIT(grossNew, dependents);
-      
-      const grossSaved = grossOld - grossNew;
-      const employerOld = calcCompanyInsuranceDetail(grossOld);
-      const employerNew = calcCompanyInsuranceDetail(grossNew);
-      const totalSaved = (grossOld + employerOld.total) - (grossNew + employerNew.total);
-      
-      // Show note
-      noteEl.innerHTML = `
-        <div class="note-warning">
-          <strong>💼 Kịch bản: DN giữ nguyên Net</strong><br>
-          DN có thể giảm Gross xuống để giữ Net như cũ, tiết kiệm <strong>${formatMoney(totalSaved)}</strong>/tháng chi phí.<br>
-          <small>Gross giảm: ${formatMoney(grossSaved)} · BH DN giảm: ${formatMoney(employerOld.total - employerNew.total)}</small>
-        </div>
-      `;
-      noteEl.style.display = 'block';
-    }
+    grossIncome = netToGross(inputValue, dependents);
   } else {
-    grossOld = inputValue;
-    grossNew = inputValue;
-    r = calculatePIT(grossOld, dependents);
-    rNew = r;
-    noteEl.style.display = 'none';
+    grossIncome = inputValue;
   }
+
+  const r = calculatePIT(grossIncome, dependents);
 
   // Reset header for normal modes
   document.querySelector('#resultSection .result-header h2').textContent = '📊 Kết quả tính thuế';
@@ -506,38 +464,23 @@ function calculate() {
     </tr>
   `;
 
-  // Use different values for keep-net scenario
-  const grossDisplay = netScenario === 'keep-net' && incomeType === 'net' 
-    ? { old: grossOld, new: grossNew } 
-    : { old: r.grossIncome, new: r.grossIncome };
-  
-  const netDisplay = netScenario === 'keep-net' && incomeType === 'net'
-    ? { old: r.netOld, new: rNew.netNew }
-    : { old: r.netOld, new: r.netNew };
-  
-  const taxDisplay = netScenario === 'keep-net' && incomeType === 'net'
-    ? { old: r.taxOld, new: rNew.taxNew }
-    : { old: r.taxOld, new: r.taxNew };
-
   const rows = [
-    { label: 'Thu nhập Gross', old: formatMoney(grossDisplay.old), new: formatMoney(grossDisplay.new), highlight: grossDisplay.old !== grossDisplay.new },
-    { label: '└ BHXH (8%)', old: formatMoney(r.bhxh), new: formatMoney(netScenario === 'keep-net' && incomeType === 'net' ? rNew.bhxh : r.bhxh), info: true },
-    { label: '└ BHYT (1.5%)', old: formatMoney(r.bhyt), new: formatMoney(netScenario === 'keep-net' && incomeType === 'net' ? rNew.bhyt : r.bhyt), info: true },
-    { label: '└ BHTN (1%)', old: formatMoney(r.bhtn), new: formatMoney(netScenario === 'keep-net' && incomeType === 'net' ? rNew.bhtn : r.bhtn), info: true },
-    { label: 'Tổng BH bắt buộc (10.5%)', old: formatMoney(r.insurance), new: formatMoney(netScenario === 'keep-net' && incomeType === 'net' ? rNew.insurance : r.insurance) },
-    { label: 'Thu nhập chịu thuế', old: formatMoney(r.incomeAfterInsurance), new: formatMoney(netScenario === 'keep-net' && incomeType === 'net' ? rNew.incomeAfterInsurance : r.incomeAfterInsurance) },
+    { label: 'Thu nhập Gross', old: formatMoney(r.grossIncome), new: formatMoney(r.grossIncome) },
+    { label: '└ BHXH (8%)', old: formatMoney(r.bhxh), new: formatMoney(r.bhxh), info: true },
+    { label: '└ BHYT (1.5%)', old: formatMoney(r.bhyt), new: formatMoney(r.bhyt), info: true },
+    { label: '└ BHTN (1%)', old: formatMoney(r.bhtn), new: formatMoney(r.bhtn), info: true },
+    { label: 'Tổng BH bắt buộc (10.5%)', old: formatMoney(r.insurance), new: formatMoney(r.insurance) },
+    { label: 'Thu nhập chịu thuế', old: formatMoney(r.incomeAfterInsurance), new: formatMoney(r.incomeAfterInsurance) },
     { label: '└ Giảm trừ bản thân', old: formatMoney(TAX_CONFIG.personalDeduction.old), new: formatMoney(TAX_CONFIG.personalDeduction.new), info: true },
     { label: `└ Giảm trừ NPT (×${dependents})`, old: formatMoney(TAX_CONFIG.dependentDeduction.old * dependents), new: formatMoney(TAX_CONFIG.dependentDeduction.new * dependents), info: true },
-    { label: 'Tổng giảm trừ', old: formatMoney(r.deductionOld), new: formatMoney(netScenario === 'keep-net' && incomeType === 'net' ? rNew.deductionNew : r.deductionNew) },
-    { label: 'Thu nhập tính thuế', old: formatMoney(r.taxableOld), new: formatMoney(netScenario === 'keep-net' && incomeType === 'net' ? rNew.taxableNew : r.taxableNew) },
-    { label: 'Thuế TNCN phải nộp', old: formatMoney(taxDisplay.old), new: formatMoney(taxDisplay.new) },
-    { label: 'Thu nhập NET', old: formatMoney(netDisplay.old), new: formatMoney(netDisplay.new), highlight: netScenario === 'keep-net' && incomeType === 'net' },
+    { label: 'Tổng giảm trừ', old: formatMoney(r.deductionOld), new: formatMoney(r.deductionNew) },
+    { label: 'Thu nhập tính thuế', old: formatMoney(r.taxableOld), new: formatMoney(r.taxableNew) },
+    { label: 'Thuế TNCN phải nộp', old: formatMoney(r.taxOld), new: formatMoney(r.taxNew) },
+    { label: 'Thu nhập NET', old: formatMoney(r.netOld), new: formatMoney(r.netNew) },
   ];
 
-  const taxSaved = taxDisplay.old - taxDisplay.new;
-
   let html = rows.map(row => `
-    <tr class="${row.info ? 'info-row' : ''} ${row.highlight ? 'diff-row' : ''}">
+    <tr class="${row.info ? 'info-row' : ''}">
       <td class="col-label">${row.label}</td>
       <td class="col-old">${row.old}</td>
       <td class="col-new">${row.new}</td>
@@ -548,13 +491,13 @@ function calculate() {
     <tr class="highlight-row">
       <td class="col-label">💰 TIỀN THUẾ GIẢM/THÁNG</td>
       <td colspan="2" class="saved-value" style="text-align: center;">
-        ${taxSaved >= 0 ? '+' : ''}${formatMoney(taxSaved)}
+        ${r.taxSaved >= 0 ? '+' : ''}${formatMoney(r.taxSaved)}
       </td>
     </tr>
     <tr class="highlight-row">
       <td class="col-label">📅 TIỀN THUẾ GIẢM/NĂM</td>
       <td colspan="2" class="saved-value" style="text-align: center;">
-        ${taxSaved >= 0 ? '+' : ''}${formatMoney(taxSaved * 12)}
+        ${r.taxSaved >= 0 ? '+' : ''}${formatMoney(r.taxSaved * 12)}
       </td>
     </tr>
   `;
@@ -728,26 +671,6 @@ document.querySelectorAll('.toggle-btn').forEach(btn => {
       'net-as-gross': 'Net làm Gross (VNĐ/tháng)',
     };
     label.textContent = labels[incomeType];
-    
-    // Show/hide scenario toggle for Net mode
-    const scenarioToggle = document.getElementById('scenarioToggle');
-    if (scenarioToggle) {
-      scenarioToggle.style.display = incomeType === 'net' ? 'flex' : 'none';
-    }
-  });
-});
-
-// Scenario toggle (keep-gross vs keep-net)
-document.querySelectorAll('.scenario-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
-    document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
-    this.classList.add('active');
-    netScenario = this.dataset.scenario;
-    
-    // Re-calculate if result is showing
-    if (document.getElementById('resultSection').classList.contains('show')) {
-      calculate();
-    }
   });
 });
 
@@ -1037,4 +960,3 @@ window.exportAsImage = exportAsImage;
 
 // Init history on load
 document.addEventListener('DOMContentLoaded', renderHistory);
-
